@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blinkit Sales Performance Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js bundled locally so the dashboard works fully offline. -->
+  <script src="chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ========================= LEFT SIDEBAR ========================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <strong>Blinkit</strong>
+        <span>Analytics Suite</span>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-page="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/><path d="M9 21v-6h6v6"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-item" data-page="logistics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+        <span>Logistics</span>
+      </button>
+      <button class="nav-item" data-page="financial">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg>
+        <span>Financial</span>
+      </button>
+      <button class="nav-item" data-page="sales">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        <span>Sales &amp; Products</span>
+      </button>
+      <button class="nav-item" data-page="geo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        <span>Geographical</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="sf-title">Data Analyst Portfolio</div>
+      <div class="sf-sub">10,000 transactions &middot; 12 months</div>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" id="backdrop"></div>
+
+  <!-- ============================ MAIN ============================= -->
+  <div class="main">
+
+    <!-- ---------------------- GLOBAL FILTER BAR ------------------- -->
+    <header class="filterbar">
+      <button class="icon-btn menu-toggle" id="menuToggle" title="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <div class="fb-filters">
+        <div class="fb-field"><label>From</label><input type="date" id="fDateFrom" /></div>
+        <div class="fb-field"><label>To</label><input type="date" id="fDateTo" /></div>
+        <div class="fb-field"><label>City</label><select id="fCity"><option value="all">All Cities</option></select></div>
+        <div class="fb-field"><label>Category</label><select id="fCategory"><option value="all">All Categories</option></select></div>
+        <div class="fb-field"><label>Store</label><select id="fStore"><option value="all">All Stores</option></select></div>
+        <div class="fb-field"><label>Status</label><select id="fStatus"><option value="all">All Status</option></select></div>
+        <div class="fb-field"><label>Customer</label><select id="fCustomer"><option value="all">All Customers</option></select></div>
+        <button class="btn btn-light" id="resetFilters" title="Reset all filters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset
+        </button>
+      </div>
+
+      <div class="fb-actions">
+        <button class="btn btn-ghost-d" id="btnRawData">Raw Data</button>
+        <button class="btn btn-yellow" id="btnDownloadCsv">Download CSV</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="filter-summary" id="filterSummary"></div>
+
+      <!-- ============================================================
+           PAGE 1 — HOME / EXECUTIVE OVERVIEW
+           ============================================================ -->
+      <section class="page" id="page-home">
+        <div class="page-head">
+          <h2>Executive Overview</h2>
+          <p>A quick, top-level view of overall business performance.</p>
+        </div>
+        <div class="kpi-grid" id="homeKpis"></div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Monthly Sales Trend</div><div class="card-note" id="homeMomNote"></div></div>
+            <div class="chart-box"><canvas id="c_home_trend"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Sales by Product Category</div><div class="card-note">Net sales</div></div>
+            <div class="chart-box"><canvas id="c_home_category"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Order Status</div><div class="card-note">Delivered / Cancelled / Returned</div></div>
+            <div class="chart-box"><canvas id="c_home_status"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Top 5 Cities by Sales</div><div class="card-note">Net sales</div></div>
+            <div class="chart-box"><canvas id="c_home_cities"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card insights-card">
+          <div class="card-head"><div class="card-title">Business Insights</div><div class="card-note">Auto-generated from filtered data</div></div>
+          <div class="insights-list" id="homeInsights"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           PAGE 2 — LOGISTICS
+           ============================================================ -->
+      <section class="page" id="page-logistics" hidden>
+        <div class="page-head">
+          <h2>Logistics &amp; Operations</h2>
+          <p>Delivery speed, reliability and fulfilment performance.</p>
+        </div>
+        <div class="kpi-grid" id="logKpis"></div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Average Delivery Time by City</div><div class="card-note">Minutes</div></div>
+            <div class="chart-box"><canvas id="c_log_delivcity"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Delivery Time Trend by Month</div><div class="card-note">Minutes</div></div>
+            <div class="chart-box"><canvas id="c_log_delivtrend"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Delivery Time Buckets</div><div class="card-note" id="logBucketNote">Delivered orders</div></div>
+            <div class="chart-box"><canvas id="c_log_buckets"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Cancellation Rate by City</div><div class="card-note">%</div></div>
+            <div class="chart-box"><canvas id="c_log_cancelcity"></canvas></div>
+          </div>
+          <div class="card span-2">
+            <div class="card-head"><div class="card-title">Top 10 Stores by Delivered Orders</div><div class="card-note">Order count</div></div>
+            <div class="chart-box"><canvas id="c_log_stores"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card insights-card">
+          <div class="card-head"><div class="card-title">Operations Insights</div><div class="card-note">Auto-generated</div></div>
+          <div class="insights-list" id="logInsights"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           PAGE 3 — FINANCIAL
+           ============================================================ -->
+      <section class="page" id="page-financial" hidden>
+        <div class="page-head">
+          <h2>Financial Performance</h2>
+          <p>Revenue, discounts and month-over-month growth.</p>
+        </div>
+        <div class="kpi-grid" id="finKpis"></div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Gross vs Net Sales by Month</div><div class="card-note">₹</div></div>
+            <div class="chart-box"><canvas id="c_fin_grossnet"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Monthly Sales Trend</div><div class="card-note" id="finMomNote"></div></div>
+            <div class="chart-box"><canvas id="c_fin_trend"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Net Sales by Discount Level</div><div class="card-note">Discount % buckets</div></div>
+            <div class="chart-box"><canvas id="c_fin_discount"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Sales by Payment Method</div><div class="card-note">Net sales share</div></div>
+            <div class="chart-box"><canvas id="c_fin_payment"></canvas></div>
+          </div>
+          <div class="card span-2">
+            <div class="card-head"><div class="card-title">Revenue by City</div><div class="card-note">Net sales</div></div>
+            <div class="chart-box"><canvas id="c_fin_city"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card insights-card">
+          <div class="card-head"><div class="card-title">Financial Insights</div><div class="card-note">Auto-generated</div></div>
+          <div class="insights-list" id="finInsights"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           PAGE 4 — SALES & PRODUCTS
+           ============================================================ -->
+      <section class="page" id="page-sales" hidden>
+        <div class="page-head">
+          <h2>Sales &amp; Products</h2>
+          <p>Category mix, best and worst performers, and product quality.</p>
+        </div>
+        <div class="kpi-grid" id="salesKpis"></div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Sales by Product Category</div><div class="card-note">Net sales</div></div>
+            <div class="chart-box"><canvas id="c_sp_category"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Quantity Sold by Category</div><div class="card-note">Units</div></div>
+            <div class="chart-box"><canvas id="c_sp_qty"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Top 10 Products by Sales</div><div class="card-note">Net sales</div></div>
+            <div class="chart-box tall"><canvas id="c_sp_top"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Bottom 10 Products by Sales</div><div class="card-note">Net sales</div></div>
+            <div class="chart-box tall"><canvas id="c_sp_bottom"></canvas></div>
+          </div>
+          <div class="card span-2">
+            <div class="card-head"><div class="card-title">Average Rating by Category</div><div class="card-note">Out of 5</div></div>
+            <div class="chart-box"><canvas id="c_sp_rating"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="card-head">
+            <div class="card-title">Product Performance</div>
+            <div class="fb-field" style="min-width:220px">
+              <input type="text" id="spSearch" placeholder="Search product or category…" />
+            </div>
+          </div>
+          <div class="legend-row">
+            <span class="badge badge-top">Top seller</span>
+            <span class="badge badge-high">High sales</span>
+            <span class="badge badge-low">Low sales</span>
+            <span class="badge badge-lowrate">Low rated</span>
+            <span class="card-note">Click a column header to sort.</span>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="productTable">
+              <thead>
+                <tr>
+                  <th data-key="product">Product <span class="arrow"></span></th>
+                  <th data-key="category">Category <span class="arrow"></span></th>
+                  <th data-key="orders" class="num">Orders <span class="arrow"></span></th>
+                  <th data-key="qty" class="num">Qty Sold <span class="arrow"></span></th>
+                  <th data-key="sales" class="num">Total Sales <span class="arrow"></span></th>
+                  <th data-key="rating" class="num">Avg Rating <span class="arrow"></span></th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           PAGE 5 — GEOGRAPHICAL
+           ============================================================ -->
+      <section class="page" id="page-geo" hidden>
+        <div class="page-head">
+          <h2>Geographical Performance</h2>
+          <p>How cities and stores compare across the network.</p>
+        </div>
+        <div class="kpi-grid" id="geoKpis"></div>
+
+        <div class="grid grid-2">
+          <div class="card span-2">
+            <div class="card-head"><div class="card-title">City Sales Map</div><div class="card-note">Bubble size = net sales &middot; positioned by location</div></div>
+            <div class="chart-box tall"><canvas id="c_geo_map"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Sales by City</div><div class="card-note">Net sales</div></div>
+            <div class="chart-box"><canvas id="c_geo_sales"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Orders by City</div><div class="card-note">Order count</div></div>
+            <div class="chart-box"><canvas id="c_geo_orders"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Average Order Value by City</div><div class="card-note">₹ per order</div></div>
+            <div class="chart-box"><canvas id="c_geo_aov"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Avg Delivery Time by City</div><div class="card-note">Minutes</div></div>
+            <div class="chart-box"><canvas id="c_geo_deliv"></canvas></div>
+          </div>
+          <div class="card span-2">
+            <div class="card-head"><div class="card-title">Cancellation Rate by City</div><div class="card-note">%</div></div>
+            <div class="chart-box"><canvas id="c_geo_cancel"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card insights-card">
+          <div class="card-head"><div class="card-title">Geographical Insights</div><div class="card-note">Auto-generated</div></div>
+          <div class="insights-list" id="geoInsights"></div>
+        </div>
+      </section>
+
+      <div class="footer">
+        Blinkit Sales Performance Dashboard &middot; Built with HTML, CSS, Vanilla JS &amp; Chart.js &middot;
+        Data is randomly generated for demonstration only.
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== RAW DATA MODAL ========================== -->
+  <div class="modal-overlay" id="rawModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Raw Transaction Data</h3>
+        <div class="modal-tools">
+          <input type="text" id="rawSearch" placeholder="Search order, city, product, store…" />
+          <button class="btn btn-yellow" id="btnDownloadCsv2">Download CSV</button>
+          <button class="modal-close" id="rawClose">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <table class="data-table" id="rawTable">
+          <thead>
+            <tr>
+              <th>Order ID</th><th>Date</th><th>City</th><th>Store</th>
+              <th>Category</th><th>Product</th><th>Item Type</th>
+              <th class="num">Qty</th><th class="num">Unit ₹</th><th class="num">Disc %</th>
+              <th class="num">Gross ₹</th><th class="num">Net ₹</th><th class="num">Rating</th>
+              <th class="num">Delivery</th><th>Status</th><th>Payment</th><th>Customer</th>
+            </tr>
+          </thead>
+          <tbody id="rawTableBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-foot">
+        <span class="card-note" id="rawCount"></span>
+        <div class="pagination">
+          <button id="rawFirst">&laquo; First</button>
+          <button id="rawPrev">&lsaquo; Prev</button>
+          <span class="page-info" id="rawPageInfo">Page 1</span>
+          <button id="rawNext">Next &rsaquo;</button>
+          <button id="rawLast">Last &raquo;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
